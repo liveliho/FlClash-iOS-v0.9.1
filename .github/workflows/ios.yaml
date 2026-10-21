@@ -106,3 +106,20 @@ jobs:
         with:
           files: dist/*.ipa
           generate_release_notes: true
+
+      # Every build of main refreshes the IPA on the standing iOS release.
+      - name: Update iOS release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.9.1-ios
+          target_commitish: ${{ github.sha }}
+          name: FlClash v0.9.1 iOS
+          files: dist/*.ipa
+          make_latest: true
+          body: |
+            FlClash v0.9.1 iOS 版，基于提交 ${{ github.sha }} 构建。
+
+            IPA 未经 Apple 签名：TrollStore 可直接安装；付费开发者账号需重签名并开启
+            Network Extensions（Packet Tunnel）和 App Groups；免费 Apple ID 无法使用 VPN。
+            详见仓库 README。
