@@ -65,6 +65,16 @@ jobs:
           flutter pub get
           flutter build ios --release --no-codesign
 
+      # flutter build prints only the last line of a native failure.
+      - name: Show native build errors
+        if: failure()
+        run: |
+          (cd plugins/rust_api/rust && \
+            BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)" \
+            cargo build --release --target aarch64-apple-ios 2>&1 | grep -E -A12 '^(error|warning: unused)' | head -150) || true
+          (cd ios && xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \
+            -sdk iphoneos CODE_SIGNING_ALLOWED=NO build 2>&1 | grep -E -B2 -A6 'error:' | head -200) || true
+
       - name: Package IPA
         run: |
           ./ios/package_ipa.sh "$PWD/dist/FlClash-$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)-ios-arm64.ipa"
