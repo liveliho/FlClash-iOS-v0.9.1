@@ -2,6 +2,11 @@ name: Build FlClash iOS v0.9.1
 
 on:
   workflow_dispatch:
+    inputs:
+      native_only:
+        description: Skip already verified Dart and Go regression checks
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -66,18 +71,36 @@ jobs:
           python3 -c "from pathlib import Path; p=Path('pubspec.yaml'); p.write_text(p.read_text().replace('build_assets: true', 'build_assets: false'))"
           dart run build_runner build --delete-conflicting-outputs
       - name: Analyze Dart
+        if: ${{ !inputs.native_only }}
         run: flutter analyze --no-fatal-infos
       - name: Go core regression tests
+        if: ${{ !inputs.native_only }}
         working-directory: project/FlClash-v0.9.1-iOS/core
         run: CGO_ENABLED=0 go test .
       - name: Flutter bridge regression tests
+        if: ${{ !inputs.native_only }}
         run: |
           cp pubspec.yaml "$RUNNER_TEMP/flclash-test-pubspec.yaml"
           trap 'cp "$RUNNER_TEMP/flclash-test-pubspec.yaml" pubspec.yaml' EXIT
           python3 -c "from pathlib import Path; p=Path('pubspec.yaml'); p.write_text(p.read_text().replace('build_assets: true', 'build_assets: false'))"
           flutter test test/plugins/service_test.dart test/core/lib_test.dart test/core/protocol_contract_test.dart test/plugins/ios_service_test.dart
       - name: Build unsigned device IPA
-        run: bash tool/ios/build_unsigned.sh
+        run: |
+          set -o pipefail
+          flutter config --enable-swift-package-manager
+          flutter pub get
+          python3 tool/ios/build_core.py
+          test -f env.json || echo '{}' > env.json
+          flutter build ios --verbose --release --no-codesign --dart-define-from-file=env.json 2>&1 | tee "$RUNNER_TEMP/ios-build.log"
+          python3 tool/ios/package_unsigned.py
+      - name: Upload native build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-diagnostics
+          path: ${{ runner.temp }}/ios-build.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload IPA and build report
         uses: actions/upload-artifact@v4
         with:
