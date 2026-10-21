@@ -86,6 +86,20 @@ jobs:
           name: FlClash-ios
           path: dist/*.ipa
 
+      # A single force-pushed commit, so the branch never accumulates builds.
+      - name: Publish to the ipa branch
+        if: github.ref == 'refs/heads/ios-port'
+        run: |
+          publish="$(mktemp -d)"
+          cp dist/*.ipa "$publish/"
+          cd "$publish"
+          git init -q -b ipa
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "FlClash iOS build from ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ipa
+
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
