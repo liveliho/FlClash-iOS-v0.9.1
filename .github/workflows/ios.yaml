@@ -70,6 +70,7 @@ jobs:
         if: failure()
         run: |
           (cd plugins/rust_api/rust && \
+            IPHONEOS_DEPLOYMENT_TARGET=15.0 \
             BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_ios="-isysroot $(xcrun --sdk iphoneos --show-sdk-path)" \
             cargo build --release --target aarch64-apple-ios 2>&1 | grep -E -A12 '^(error|warning: unused)' | head -150) || true
           (cd ios && xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \

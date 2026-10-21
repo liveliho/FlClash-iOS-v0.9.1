@@ -23,7 +23,7 @@ Map<String, String> _bindgenEnvironment(BuildInput input) {
     return const {};
   }
   if (input.config.code.targetOS == OS.iOS) {
-    return _iosBindgenEnvironment(input.config.code);
+    return _iosBuildEnvironment(input.config.code);
   }
   if (input.config.code.targetOS != OS.android) {
     return const {};
@@ -52,8 +52,10 @@ bool _isLibclang(FileSystemEntity entity) {
 }
 
 // On iOS bindgen runs on Xcode's own libclang, which finds no headers for a
-// cross target unless it is handed the SDK.
-Map<String, String> _iosBindgenEnvironment(CodeConfig code) {
+// cross target unless it is handed the SDK. Without a deployment target cc
+// builds QuickJS for the SDK's own version while rustc links for iOS 10,
+// whose libSystem lacks the ___chkstk_darwin those objects call.
+Map<String, String> _iosBuildEnvironment(CodeConfig code) {
   final sdk = code.iOS.targetSdk;
   final result = Process.runSync('xcrun', [
     '--sdk',
@@ -72,5 +74,6 @@ Map<String, String> _iosBindgenEnvironment(CodeConfig code) {
   return {
     'BINDGEN_EXTRA_CLANG_ARGS_${arch}_apple_ios$simulator':
         '-isysroot ${(result.stdout as String).trim()}',
+    'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
   };
 }
