@@ -1,0 +1,87 @@
+name: Build FlClash iOS v0.9.1
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'FlClash-v0.9.1-iOS-port.zip'
+      - '.github/workflows/ios-cloud.yml'
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+  BOT: 'true'
+
+concurrency:
+  group: ios-v091-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: project/FlClash-v0.9.1-iOS
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Unpack pinned source
+        working-directory: .
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib, zipfile
+          archive = pathlib.Path('FlClash-v0.9.1-iOS-port.zip')
+          checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert checksum == '0bb57e50fe04a9a730eeecbf5e2159740d167fc8c46d68829269380b7fd235f3', checksum
+          with zipfile.ZipFile(archive) as source:
+              assert source.testzip() is None
+              source.extractall('project')
+          PY
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.27.0'
+          cache-dependency-path: project/FlClash-v0.9.1-iOS/core/go.sum
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.6'
+          cache: true
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          flutter --version
+          go version
+          rustup show
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Regenerate providers
+        run: |
+          cp pubspec.yaml "$RUNNER_TEMP/flclash-pubspec.yaml"
+          trap 'cp "$RUNNER_TEMP/flclash-pubspec.yaml" pubspec.yaml' EXIT
+          python3 -c "from pathlib import Path; p=Path('pubspec.yaml'); p.write_text(p.read_text().replace('build_assets: true', 'build_assets: false'))"
+          dart run build_runner build --delete-conflicting-outputs
+      - name: Analyze Dart
+        run: flutter analyze --no-fatal-infos
+      - name: Go core regression tests
+        working-directory: project/FlClash-v0.9.1-iOS/core
+        run: CGO_ENABLED=0 go test .
+      - name: Flutter bridge regression tests
+        run: |
+          cp pubspec.yaml "$RUNNER_TEMP/flclash-test-pubspec.yaml"
+          trap 'cp "$RUNNER_TEMP/flclash-test-pubspec.yaml" pubspec.yaml' EXIT
+          python3 -c "from pathlib import Path; p=Path('pubspec.yaml'); p.write_text(p.read_text().replace('build_assets: true', 'build_assets: false'))"
+          flutter test test/plugins/service_test.dart test/core/lib_test.dart test/core/protocol_contract_test.dart test/plugins/ios_service_test.dart
+      - name: Build unsigned device IPA
+        run: bash tool/ios/build_unsigned.sh
+      - name: Upload IPA and build report
+        uses: actions/upload-artifact@v4
+        with:
+          name: FlClash-v0.9.1-iOS-unsigned
+          path: project/FlClash-v0.9.1-iOS/dist/*
+          if-no-files-found: error
+          retention-days: 14
