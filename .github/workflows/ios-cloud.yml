@@ -37,7 +37,7 @@ jobs:
           import hashlib, pathlib, zipfile
           archive = pathlib.Path('FlClash-v0.9.1-iOS-port.zip')
           checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
-          assert checksum == '6cfe4297fff78de0997318ff78de08dc47ea7fd871da143e7456926fd43f9d53', checksum
+          assert checksum == '3f57c4c48da89a05b7f02dede911f7ba7aa3c9c42c670d98e2babd01b0bf3018', checksum
           with zipfile.ZipFile(archive) as source:
               assert source.testzip() is None
               source.extractall('project')
