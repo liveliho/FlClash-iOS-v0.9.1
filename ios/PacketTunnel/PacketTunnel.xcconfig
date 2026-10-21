@@ -1,0 +1,3 @@
+// Only Flutter's version numbers: the Pods settings Runner's xcconfig pulls
+// in would link the app's plugins into the extension.
+#include "../Flutter/Generated.xcconfig"
