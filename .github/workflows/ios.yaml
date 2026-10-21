@@ -19,7 +19,8 @@ env:
 jobs:
   ipa:
     name: Build IPA
-    runs-on: macos-15
+    # connectivity_plus 7.2 uses NWPath APIs that need the iOS 26 SDK.
+    runs-on: macos-26
     permissions:
       contents: write
     steps:

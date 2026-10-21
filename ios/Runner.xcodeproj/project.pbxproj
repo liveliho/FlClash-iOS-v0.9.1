@@ -492,6 +492,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -527,6 +529,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -674,6 +678,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -707,6 +713,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -742,6 +750,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -778,6 +788,8 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-lresolv",
+					"-framework",
+					Security,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.follow.clash.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
