@@ -88,7 +88,7 @@ jobs:
 
       # A single force-pushed commit, so the branch never accumulates builds.
       - name: Publish to the ipa branch
-        if: github.ref == 'refs/heads/ios-port'
+        if: github.ref == 'refs/heads/main'
         run: |
           publish="$(mktemp -d)"
           cp dist/*.ipa "$publish/"
